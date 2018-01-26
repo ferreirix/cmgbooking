@@ -13,14 +13,14 @@ namespace CMGBooker
         private static HttpClient client = new HttpClient();
         public static async Task<string> GetSecret(string id, TraceWriter log)
         {
-            var azureServiceTokenProvider = new AzureServiceTokenProvider();
-            var callback = new KeyVaultClient.AuthenticationCallback(azureServiceTokenProvider.KeyVaultTokenCallback);
-            var kvClient = new KeyVaultClient(callback, client);
-
-            var url = $"{ConfigurationManager.AppSettings["KeyVaultUri"]}secrets/{id}";
-
             try
             {
+                var azureServiceTokenProvider = new AzureServiceTokenProvider();
+                var callback = new KeyVaultClient.AuthenticationCallback(azureServiceTokenProvider.KeyVaultTokenCallback);
+                var kvClient = new KeyVaultClient(callback, client);
+
+                var url = $"{ConfigurationManager.AppSettings["KeyVaultUri"]}secrets/{id}";
+
                 return (await kvClient.GetSecretAsync(url)).Value;
             }
             catch (Exception ex)

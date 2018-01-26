@@ -15,9 +15,11 @@ namespace CMGBooker
     {
         private HttpClient httpClient;
         private HttpClientHandler httpHandler;
-        private readonly TraceWriter log;
         private CookieContainer cookiesContainer;
-        const string loginUri = "https://prod-resamania.cmgsportsclub.com/account/login";
+        private readonly TraceWriter log;
+        public const string BaseUrl = "https://prod-resamania.cmgsportsclub.com";
+        public const string LoginSubPath = "/account/login";
+        public const string PlanningSubPath = "/members/planning";
 
         public Booking(TraceWriter log)
         {
@@ -29,29 +31,14 @@ namespace CMGBooker
                 AllowAutoRedirect = true,
             };
             httpHandler.CookieContainer = cookiesContainer;
-            cookiesContainer.Add(new Uri("https://prod-resamania.cmgsportsclub.com"),
-                                   new Cookie("clubs", "6", "/", "prod-resamania.cmgsportsclub.com"));
+            cookiesContainer.Add(new Uri(BaseUrl), new Cookie("clubs", "6", "/", "prod-resamania.cmgsportsclub.com"));
             httpClient = new HttpClient(httpHandler);
-            httpClient.DefaultRequestHeaders.Accept.Clear();
-            httpClient.DefaultRequestHeaders
-                      .Accept
-                      .Add(new MediaTypeWithQualityHeaderValue("application/x-www-form-urlencoded"));
-            httpClient.DefaultRequestHeaders.Add("Pragma", "no-cache");
-            httpClient.DefaultRequestHeaders.Add("Origin", "https://prod-resamania.cmgsportsclub.com");
-            httpClient.DefaultRequestHeaders.Add("Accept-Encoding", "gzip, deflate, br");
-            httpClient.DefaultRequestHeaders.Add("Accept-Language", "fr");
-            httpClient.DefaultRequestHeaders.Add("Upgrade-Insecure-Requests", "1");
-            httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36");
-            httpClient.DefaultRequestHeaders.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8");
-            httpClient.DefaultRequestHeaders.Add("Cache-Control", "no-cache");
-            httpClient.DefaultRequestHeaders.Add("Referer", "https://prod-resamania.cmgsportsclub.com/account/login");
-            httpClient.DefaultRequestHeaders.Add("Connection", "keep-alive");
         }
 
-        public async Task Book()
+        public async Task PerformLogin()
         {
-            Console.WriteLine("HELLO");
             log.Info("Attempting to login");
+            httpClient.AddLoginHeaders();
 
             var email = await AzureKeyVaultProvider.GetSecret("gmail", log);
             var secret = await AzureKeyVaultProvider.GetSecret("cmgsecret", log);
@@ -61,41 +48,43 @@ namespace CMGBooker
                 new KeyValuePair<string, string>("_password", secret)
             });
 
-            var response = await httpClient.PostAsync(loginUri, data);
+            var response = await httpClient.PostAsync(BaseUrl + LoginSubPath, data);
             log.Info(response.StatusCode.ToString());
+        }
 
-            httpClient = new HttpClient(httpHandler);
-            httpClient.DefaultRequestHeaders.Add("Pragma", "no-cache");
-            httpClient.DefaultRequestHeaders.Add("Accept-Encoding", "gzip, deflate, br");
-            httpClient.DefaultRequestHeaders.Add("Accept-Language", "fr");
-            httpClient.DefaultRequestHeaders.Add("Upgrade-Insecure-Requests", "1");
-            httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36");
-            httpClient.DefaultRequestHeaders.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8");
-            httpClient.DefaultRequestHeaders.Add("Referer", "https://prod-resamania.cmgsportsclub.com/members/planning?activity=.*&minhour=7&maxhour=23"); ;
-            httpClient.DefaultRequestHeaders.Add("Connection", "keep-alive");
-            httpClient.DefaultRequestHeaders.Add("Cache-Control", "no-cache");
-
+        /// <summary>
+        /// Request that will set the missing cookies in order to book a class
+        /// </summary>
+        /// <returns></returns>
+        public async Task PerformHomeRequest()
+        {
             log.Info("Requesting home page");
-            UriBuilder builder = new UriBuilder("https://prod-resamania.cmgsportsclub.com/members/planning");
-            builder.Query = "activity=.*&minhour=7&maxhour=23&day=7";
-            var homeResult = await httpClient.GetAsync(builder.Uri);
+            httpClient.AddDefaultHeaders();
+
+            var homeResult = await httpClient.GetAsync(BaseUrl + PlanningSubPath);
             log.Info(homeResult.StatusCode.ToString());
 
             log.Info("Cookies: ");
-            var responseCookies = cookiesContainer.GetCookies(new Uri(loginUri)).Cast<Cookie>();
+            var responseCookies = cookiesContainer.GetCookies(new Uri(BaseUrl)).Cast<Cookie>();
             foreach (Cookie cookie in responseCookies)
                 log.Info(cookie.Name + ": " + cookie.Value);
+        }
 
-            log.Info(builder.Uri.ToString());
+        public async Task Book()
+        {
+            UriBuilder builder = new UriBuilder(BaseUrl + "/members/planning");
+            builder.Query = "activity=.*&minhour=7&maxhour=23&day=7";
 
             log.Info("Requesting classes page");
             var classesPageResult = await httpClient.GetAsync(builder.Uri);
 
             log.Info(classesPageResult.StatusCode.ToString());
             var classesContent = await classesPageResult.Content.ReadAsStringAsync();
+            log.Info(classesContent);
 
             var link = GetClassLink(classesContent);
             log.Info($"link for booking {link}");
+
             if (!string.IsNullOrWhiteSpace(link))
             {
                 log.Info($"booking...");
@@ -109,12 +98,13 @@ namespace CMGBooker
             var htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(html);
 
+            //get the json schedules
             var script = htmlDoc.DocumentNode.SelectSingleNode("//script[contains(text(),'planningTableData')]");
             var data = script.InnerText.Replace("var planningTableData =", "").Trim('\r', '\n', ';', ' ');
-            log.Info(data);
 
             dynamic classes = JsonConvert.DeserializeObject(data);
             var link = string.Empty;
+
             foreach (var sportsClass in classes)
             {
                 if ("BODY PUMP".Equals((string)sportsClass.activity.name))
@@ -122,6 +112,7 @@ namespace CMGBooker
                     Console.WriteLine(sportsClass.activity.name);
                     Console.WriteLine(sportsClass.actions);
                     var htmlLink = new HtmlDocument();
+                    //load html button with link to make a reservation
                     htmlLink.LoadHtml((string)sportsClass.actions);
                     link = htmlLink.DocumentNode.FirstChild.GetAttributeValue("data-subscribelink", "");
                     break;

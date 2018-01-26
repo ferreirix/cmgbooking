@@ -12,7 +12,13 @@ namespace CMGBooker
         {
             log.Info($"C# Timer trigger function executed at: {DateTime.Now}");
 
-            await new Booking(log).Book();
+            var booker = new Booking(log);
+
+            await booker.PerformLogin();
+
+            await booker.PerformHomeRequest();
+
+            await booker.Book();
         }
     }
 }
