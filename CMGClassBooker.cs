@@ -8,7 +8,7 @@ namespace CMGBooker
     public static class CMGClassBooker
     {
         [FunctionName("CMGClassBooker")]
-        public async static Task Run([TimerTrigger("0 0 7 * * *")]TimerInfo myTimer, TraceWriter log)
+        public async static Task Run([TimerTrigger("0 0 */1 * * *")]TimerInfo myTimer, TraceWriter log)
         {
             log.Info($"C# Timer trigger function executed at: {DateTime.Now}");
 
