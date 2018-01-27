@@ -80,7 +80,6 @@ namespace CMGBooker
 
             log.Info(classesPageResult.StatusCode.ToString());
             var classesContent = await classesPageResult.Content.ReadAsStringAsync();
-            log.Info(classesContent);
 
             var link = GetClassLink(classesContent);
             log.Info($"link for booking {link}");
@@ -101,6 +100,7 @@ namespace CMGBooker
             //get the json schedules
             var script = htmlDoc.DocumentNode.SelectSingleNode("//script[contains(text(),'planningTableData')]");
             var data = script.InnerText.Replace("var planningTableData =", "").Trim('\r', '\n', ';', ' ');
+            log.Info(data);
 
             dynamic classes = JsonConvert.DeserializeObject(data);
             var link = string.Empty;
