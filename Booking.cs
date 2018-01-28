@@ -3,6 +3,7 @@ using Microsoft.Azure.WebJobs.Host;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -119,6 +120,21 @@ namespace CMGBooker
                 }
             }
             return link;
+        }
+
+        /// <summary>
+        /// Gets the list of classes to book in the same day next week.
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<SportsClass> GetClassesToBook()
+        {
+            using (StreamReader r = new StreamReader("mybookings.json"))
+            {
+                string json = r.ReadToEnd();
+                var classes = JsonConvert.DeserializeObject<List<SportsClass>>(json)
+                    .Where(c => c.Day == DateTime.UtcNow.DayOfWeek);
+                return classes;
+            }
         }
     }
 }

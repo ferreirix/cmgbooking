@@ -4,6 +4,14 @@
     <AssemblyName>CMGBooker</AssemblyName>
     <RootNamespace>CMGBooker</RootNamespace>
   </PropertyGroup>
+  <ItemGroup>
+    <None Remove="mybookings.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="mybookings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
   <ItemGroup>    
     <PackageReference Include="HtmlAgilityPack" Version="1.6.15" />    
     <PackageReference Include="Microsoft.Azure.KeyVault" Version="2.3.2" />    
