@@ -9,11 +9,13 @@ namespace CMGBooker
     public static class CMGClassBooker
     {
         [FunctionName("CMGClassBooker")]
-        public async static Task Run([TimerTrigger("15 0 7 * * *")]TimerInfo myTimer, TraceWriter log)
+        public async static Task Run([TimerTrigger("15 0 7 * * *")]TimerInfo myTimer,
+            TraceWriter log,
+            ExecutionContext context)
         {
             log.Info($"C# Timer trigger function executed at: {DateTime.Now}");
 
-            var booker = new Booking(log);
+            var booker = new Booking(log, context);
 
             var classesToBook = booker.GetClassesToBook();
 

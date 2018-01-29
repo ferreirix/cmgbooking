@@ -1,4 +1,5 @@
 ﻿using HtmlAgilityPack;
+using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Host;
 using Newtonsoft.Json;
 using System;
@@ -7,7 +8,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Threading.Tasks;
 
 namespace CMGBooker
@@ -18,13 +18,16 @@ namespace CMGBooker
         private HttpClientHandler httpHandler;
         private CookieContainer cookiesContainer;
         private readonly TraceWriter log;
+        private readonly ExecutionContext context;
         public const string BaseUrl = "https://prod-resamania.cmgsportsclub.com";
         public const string LoginSubPath = "/account/login";
         public const string PlanningSubPath = "/members/planning";
 
-        public Booking(TraceWriter log)
+        public Booking(TraceWriter log,
+            ExecutionContext context)
         {
             this.log = log;
+            this.context = context;
             cookiesContainer = new CookieContainer();
             httpHandler = new HttpClientHandler()
             {
@@ -42,7 +45,8 @@ namespace CMGBooker
         /// <returns></returns>
         public IEnumerable<SportsClass> GetClassesToBook()
         {
-            using (StreamReader r = new StreamReader("mybookings.json"))
+            string bookingFile = Path.Combine(context.FunctionDirectory, @"..\AppData", "mybookings.json");
+            using (StreamReader r = new StreamReader(bookingFile))
             {
                 string json = r.ReadToEnd();
                 var classes = JsonConvert.DeserializeObject<List<SportsClass>>(json)

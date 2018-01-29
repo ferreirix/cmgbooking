@@ -8,8 +8,8 @@
     <None Remove="mybookings.json" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="mybookings.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <Content Include="AppData\mybookings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <ItemGroup>    
