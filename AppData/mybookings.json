@@ -1,12 +1,17 @@
 ﻿[
+    {
+    "day": "Monday",
+    "name": "Body pump",
+    "time": "07:15"
+  },
   {
     "day": "Tuesday",
     "name": "Cycling",
-    "time": "07:30"
+    "time": "07:15"
   },
   {
     "day": "Thursday",
     "name": "Cycling",
-    "time": "07:30"
+    "time": "07:15"
   }
 ]
