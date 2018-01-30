@@ -96,7 +96,7 @@ namespace CMGBooker
 
             var links = GetClassesLink(schedule, classesToBook);
 
-            if (links?.Count() > 0)
+            if (links?.Count > 0)
             {
                 log.Info($"links for booking {string.Join("; ", links.ToArray())}");
                 log.Info($"booking...");
