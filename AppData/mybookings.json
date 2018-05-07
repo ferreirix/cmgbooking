@@ -1,5 +1,5 @@
 ﻿[
-    {
+  {
     "day": "Monday",
     "name": "Body pump",
     "time": "07:15"
@@ -13,5 +13,10 @@
     "day": "Thursday",
     "name": "Cycling",
     "time": "07:15"
+  },
+  {
+    "day": "Saturday",
+    "name": "Body pump",
+    "time": "09:30"
   }
 ]

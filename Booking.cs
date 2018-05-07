@@ -129,6 +129,8 @@ namespace CMGBooker
             var htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(classesContent);
 
+            log.Info(classesContent);
+
             //get the schedule from json 
             var script = htmlDoc.DocumentNode.SelectSingleNode("//script[contains(text(),'planningTableData')]");
             var data = script.InnerText.Replace("var planningTableData =", "").Trim('\r', '\n', ';', ' ');

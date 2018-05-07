@@ -9,7 +9,7 @@ namespace CMGBooker
     public static class CMGClassBooker
     {
         [FunctionName("CMGClassBooker")]
-        public async static Task Run([TimerTrigger("15 0 7 * * *")]TimerInfo myTimer,
+        public async static Task Run([TimerTrigger("0 2 7 * * *")]TimerInfo myTimer,
             TraceWriter log,
             ExecutionContext context)
         {
